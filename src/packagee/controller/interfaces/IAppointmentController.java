@@ -10,7 +10,9 @@ public interface IAppointmentController extends IController {
 
     Response acceptAppointment(String appointmentId, String doctorId);
 
-    Response completeAppointment(String appointmentId, String doctorId);
+    Response completeAppointment(String appointmentId, String doctorId,
+                                 String diagnosis, String observations,
+                                 String recommendedTreatment, String followUp);
 
     Response cancelAppointment(String appointmentId, String patientId);
 

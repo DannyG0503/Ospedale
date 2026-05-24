@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import packagee.controller.NavigationController;
@@ -1281,7 +1282,16 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
             JOptionPane.showMessageDialog(this, "Pick a PENDING appointment to complete.");
             return;
         }
-        Response r = appointmentController.completeAppointment(sel.toString(), String.valueOf(doctorId));
+        Response r = appointmentController.completeAppointment(
+                sel.toString(), String.valueOf(doctorId),
+                jTextArea5.getText(), jTextArea6.getText(),
+                jTextArea7.getText(), jTextArea8.getText());
+        if (r.isOk()) {
+            jTextArea5.setText("");
+            jTextArea6.setText("");
+            jTextArea7.setText("");
+            jTextArea8.setText("");
+        }
         afterAppointmentChange(r);
     }//GEN-LAST:event_jButton5ActionPerformed
 

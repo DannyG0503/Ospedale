@@ -77,13 +77,19 @@ public class AppointmentController implements IController, IAppointmentControlle
         return new Response(Response.OK, "Appointment accepted", serialize(a));
     }
 
-    public Response completeAppointment(String appointmentId, String doctorId) {
+    public Response completeAppointment(String appointmentId, String doctorId,
+                                        String diagnosis, String observations,
+                                        String recommendedTreatment, String followUp) {
         Appointment a = store.findAppointmentById(appointmentId);
         if (a == null) return new Response(Response.NOT_FOUND, "Appointment not found", null);
         Response check = checkDoctorOwns(a, doctorId);
         if (check != null) return check;
         if (a.getStatus() != AppointmentStatus.PENDING)
             return new Response(Response.CONFLICT, "Appointment is not in PENDING state", null);
+        a.setDiagnosis(diagnosis);
+        a.setObservations(observations);
+        a.setRecommendedTreatment(recommendedTreatment);
+        a.setFollowUp(followUp);
         a.setStatus(AppointmentStatus.COMPLETED);
         store.notifyObservers("APPOINTMENT_UPDATED", store.serializeAppointment(a));
         return new Response(Response.OK, "Appointment completed", serialize(a));
