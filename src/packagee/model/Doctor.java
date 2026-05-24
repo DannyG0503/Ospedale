@@ -1,26 +1,20 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package packagee;
+package packagee.model;
 
 import java.util.ArrayList;
 
-/**
- *
- * @author edangulo
- */
 public class Doctor extends User {
-    
+
     private Specialty specialty;
     private String licenceNumber;
     private String assignedOffice;
-    private ArrayList<Appointment> appointments;
-    private ArrayList<Hospitalization> hospitalizations;
+    private final ArrayList<Appointment> appointments;
+    private final ArrayList<Hospitalization> hospitalizations;
 
-    public Doctor(long id, String username, String firstname, String lastname, String password, Specialty specialty, String licenceNumber, String assignedOffice) {
+    public Doctor(long id, String username, String firstname, String lastname, String password,
+                  Specialty specialty, String licenceNumber, String assignedOffice) {
         super(id, username, firstname, lastname, password);
-        hospitalizations = new ArrayList<>();
+        this.appointments = new ArrayList<>();
+        this.hospitalizations = new ArrayList<>();
         this.specialty = specialty;
         this.licenceNumber = licenceNumber;
         this.assignedOffice = assignedOffice;
@@ -30,11 +24,27 @@ public class Doctor extends User {
         return appointments;
     }
 
+    public ArrayList<Hospitalization> getHospitalizations() {
+        return hospitalizations;
+    }
+
     public Specialty getSpecialty() {
         return specialty;
     }
-    
-    public boolean addHospitalization(Hospitalization hosp){
+
+    public String getLicenceNumber() {
+        return licenceNumber;
+    }
+
+    public String getAssignedOffice() {
+        return assignedOffice;
+    }
+
+    public boolean addAppointment(Appointment appt) {
+        return appointments.add(appt);
+    }
+
+    public boolean addHospitalization(Hospitalization hosp) {
         return hospitalizations.add(hosp);
     }
 

@@ -1,0 +1,16 @@
+package packagee.model;
+
+public enum Specialty {
+
+    GENERAL_MEDICINE,
+    CARDIOLOGY,
+    PEDIATRICS,
+    NEUROLOGY,
+    ORTHOPEDICS,
+    GYNECOLOGY,
+    DERMATOLOGY,
+    PSYCHIATRY,
+    ONCOLOGY,
+    OPHTHALMOLOGY,
+    INTERNAL_MEDICINE
+}

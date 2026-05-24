@@ -2,34 +2,49 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package packagee;
+package packagee.view;
 
+<<<<<<< HEAD:src/packagee/view/LoginView.java
+=======
+import packagee.model.*;
 import com.formdev.flatlaf.FlatDarkLaf;
+>>>>>>> 1cea28b9277e52c2c7c4a4b39f5b0f64d28a1115:src/packagee/NewJFrame.java
 import java.awt.Color;
-import java.time.LocalDate;
-import java.time.Month;
-import java.util.ArrayList;
-import javax.swing.UIManager;
+import java.util.Map;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import packagee.controller.AuthController;
+import packagee.controller.PatientController;
+import packagee.controller.Response;
+import packagee.controller.interfaces.IAuthController;
+import packagee.controller.interfaces.IPatientController;
+import packagee.model.DataStore;
 
-/**
- *
- * @author jjlora
- * @author edangulo
- */
-public class NewJFrame extends javax.swing.JFrame {
+public class LoginView extends javax.swing.JFrame {
 
     private int x, y;
-    private ArrayList<User> users;
-    private ArrayList<Hospitalization> hospitalizations;
-    private ArrayList<Appointment> appointments;
+    private final IAuthController authController;
+    private final IPatientController patientController;
 
-    public NewJFrame() {
+    // semantic aliases for the GEN-generated components
+    private JTextField txtUsername;
+    private JTextField txtPassword;
+    private JButton btnLogin;
+
+    public LoginView() {
+        DataStore ds = DataStore.getInstance();
+        this.authController = new AuthController(ds);
+        this.patientController = new PatientController(ds);
+
         initComponents();
         this.setBackground(new Color(0, 0, 0, 0));
         this.setLocationRelativeTo(null);
 
-        this.users = new ArrayList<>();
-        this.users.add(new Administrator(0, "admin", "admin", "adnim", "admin123"));
+        // wire spec-named aliases onto the existing components
+        this.txtUsername = jTextField1;
+        this.txtPassword = jTextField2;
+        this.btnLogin    = jButton2;
     }
 
     /**
@@ -41,11 +56,11 @@ public class NewJFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        panelRound1 = new packagee.PanelRound();
-        panelRound2 = new packagee.PanelRound();
+        panelRound1 = new packagee.view.PanelRound();
+        panelRound2 = new packagee.view.PanelRound();
         jButton1 = new javax.swing.JButton();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        panelRound3 = new packagee.PanelRound();
+        panelRound3 = new packagee.view.PanelRound();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -414,74 +429,52 @@ public class NewJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
-        User selectedUser = null;
-        for (User user : this.users) {
-            if (jTextField1.getText().equals(user.getUsername())) {
-                selectedUser = user;
-                if (selectedUser.getPassword().equals(jTextField2.getText())) {
-                    if (selectedUser instanceof Administrator ) {
-                        NewJFrame11 admin = new NewJFrame11(selectedUser,users,hospitalizations, appointments);
-                        this.setVisible(false);
-                        admin.setVisible(true);
-                    }
-                    else if (selectedUser instanceof Doctor ) {
-                        NewJFrame111 doctor = new NewJFrame111(selectedUser,(Doctor)selectedUser,users,hospitalizations,appointments);
-                        this.setVisible(false);
-                        doctor.setVisible(true);
-                    }
-                    else {
-                        NewJFrame1 patient = new NewJFrame1(selectedUser,(Patient) selectedUser,users,appointments, hospitalizations);
-                        this.setVisible(false);
-                        patient.setVisible(true);
-                    }
-                }
-            }
+        Response r = authController.login(txtUsername.getText(), txtPassword.getText());
+        if (!r.isOk()) {
+            JOptionPane.showMessageDialog(this, r.getMessage(), "Login failed", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-
+        @SuppressWarnings("unchecked")
+        Map<String, Object> info = (Map<String, Object>) r.getData();
+        String role = (String) info.get("role");
+        javax.swing.JFrame next;
+        switch (role) {
+            case "ADMIN":   next = new AdminView(info); break;
+            case "DOCTOR":  next = new DoctorView(info, info); break;
+            case "PATIENT": next = new PatientView(info, info); break;
+            default:
+                JOptionPane.showMessageDialog(this, "Unknown role: " + role, "Login error", JOptionPane.ERROR_MESSAGE);
+                return;
+        }
+        next.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
-        String firstname = jTextField3.getText();
-        String lastname = jTextField4.getText();
-        long id = Long.parseLong(jTextField5.getText());
-        boolean gender = (jComboBox1.getSelectedIndex() == 0 ? null : (jComboBox1.getSelectedIndex() == 1 ));
-        String birth = jTextField12.getText();
-        String address = jTextField11.getText();
-        long phone = Long.parseLong(jTextField6.getText());
-        String email = jTextField7.getText();
-        String user = jTextField8.getText();
-        String password = jTextField9.getText();
-        String comPassword = jTextField10.getText();
-        LocalDate birthdate = LocalDate.of(Integer.parseInt(birth.substring(0, 4)), Integer.parseInt(birth.substring(5, 7)), Integer.parseInt(birth.substring(8)));
-        if (comPassword.equals(password)) {
-            users.add(new Patient(id, user, firstname, lastname, password, email, birthdate, gender, phone, address));
+        Response r = patientController.registerPatient(
+                jTextField5.getText(),
+                jTextField8.getText(),
+                jTextField9.getText(),
+                jTextField10.getText(),
+                jTextField3.getText(),
+                jTextField4.getText(),
+                jTextField6.getText(),
+                jTextField7.getText(),
+                jTextField12.getText());
+        if (r.isOk()) {
+            JOptionPane.showMessageDialog(this, "Registration successful. You can now log in.");
+            for (JTextField f : new JTextField[]{jTextField3, jTextField4, jTextField5, jTextField6,
+                    jTextField7, jTextField8, jTextField9, jTextField10, jTextField11, jTextField12}) {
+                f.setText("");
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, r.getMessage(), "Registration failed", JOptionPane.ERROR_MESSAGE);
         }
-        
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jTextField10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField10ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextField10ActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        System.setProperty("flatlaf.useNativeLibrary", "false");
-
-        try {
-            UIManager.setLookAndFeel(new FlatDarkLaf());
-        } catch (Exception ex) {
-            System.err.println("Failed to initialize LaF");
-        }
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new NewJFrame().setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
@@ -516,8 +509,8 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField7;
     private javax.swing.JTextField jTextField8;
     private javax.swing.JTextField jTextField9;
-    private packagee.PanelRound panelRound1;
-    private packagee.PanelRound panelRound2;
-    private packagee.PanelRound panelRound3;
+    private packagee.view.PanelRound panelRound1;
+    private packagee.view.PanelRound panelRound2;
+    private packagee.view.PanelRound panelRound3;
     // End of variables declaration//GEN-END:variables
 }

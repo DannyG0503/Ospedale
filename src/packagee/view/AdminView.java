@@ -2,31 +2,87 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package packagee;
+package packagee.view;
 
+import packagee.model.*;
 import java.awt.Color;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import packagee.controller.DoctorController;
+import packagee.controller.PatientController;
+import packagee.controller.Response;
+import packagee.controller.interfaces.IDoctorController;
+import packagee.controller.interfaces.IPatientController;
+import packagee.model.DataStore;
+import packagee.model.Specialty;
+import packagee.model.observer.Observer;
 
-/**
- *
- * @author jjlora
- * @author edangulo
- */
-public class NewJFrame11 extends javax.swing.JFrame {
+public class AdminView extends javax.swing.JFrame implements Observer {
 
     private int x, y;
-    private ArrayList<User> users;
-    private ArrayList<Appointment>appointments;
-    private ArrayList<Hospitalization>hospitalizations;
-    private User user;
-    public NewJFrame11(User user, ArrayList<User>users,ArrayList<Hospitalization> hospitalizations, ArrayList<Appointment> appointments) {
+    private final Map<String, Object> loggedInUser;
+
+    private final IDoctorController doctorController;
+    private final IPatientController patientController;
+
+    // semantic aliases (per spec)
+    private JTextField txtDoctorId;
+    private JTextField txtDoctorUsername;
+    private JTextField txtDoctorPassword;
+    private JTextField txtDoctorConfirmPassword;
+    private JTextField txtDoctorFirstname;
+    private JTextField txtDoctorLastname;
+    private JTextField txtDoctorLicense;
+    private JTextField txtDoctorOffice;
+    private JComboBox<String> cmbDoctorSpecialty;
+    private JButton    btnRegisterDoctor;
+    private JComboBox<String> cmbUserPicker;
+
+    // simple in-memory lists of users (id -> map) so we can map combo selection back to a user
+    private final java.util.List<Map<String, Object>> cachedPatients = new java.util.ArrayList<>();
+    private final java.util.List<Map<String, Object>> cachedDoctors  = new java.util.ArrayList<>();
+
+    public AdminView(Map<String, Object> loggedInUser) {
+        DataStore ds = DataStore.getInstance();
+        this.doctorController = new DoctorController(ds);
+        this.patientController = new PatientController(ds);
+        this.loggedInUser = loggedInUser;
+
         initComponents();
-        this.user = user;
-        this.users = users;
-        this.hospitalizations = hospitalizations;
-        this.appointments = appointments;
         this.setBackground(new Color(0, 0, 0, 0));
         this.setLocationRelativeTo(null);
+
+        ds.addObserver(this);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                DataStore.getInstance().removeObserver(AdminView.this);
+            }
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                DataStore.getInstance().removeObserver(AdminView.this);
+            }
+        });
+
+        this.txtDoctorFirstname       = jTextField3;
+        this.txtDoctorLastname        = jTextField4;
+        this.txtDoctorId              = jTextField5;
+        this.txtDoctorLicense         = jTextField6;
+        this.txtDoctorOffice          = jTextField7;
+        this.txtDoctorUsername        = jTextField8;
+        this.txtDoctorPassword        = jTextField9;
+        this.txtDoctorConfirmPassword = jTextField10;
+        this.cmbDoctorSpecialty       = jComboBox1;
+        this.btnRegisterDoctor        = jButton9;
+        this.cmbUserPicker            = jComboBox2;
+
+        populateSpecialtyCombo();
+        refreshUsersData();
     }
 
     /**
@@ -38,11 +94,11 @@ public class NewJFrame11 extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        panelRound1 = new packagee.PanelRound();
-        panelRound2 = new packagee.PanelRound();
+        panelRound1 = new packagee.view.PanelRound();
+        panelRound2 = new packagee.view.PanelRound();
         jButton1 = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        panelRound3 = new packagee.PanelRound();
+        panelRound3 = new packagee.view.PanelRound();
         jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
@@ -411,55 +467,118 @@ public class NewJFrame11 extends javax.swing.JFrame {
     }//GEN-LAST:event_panelRound2MouseDragged
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        System.exit(0);
+        this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
-        String firstname = jTextField3.getText();
-        String lastname = jTextField4.getText();
-        long id = Long.parseLong(jTextField5.getText());
-        String spec = jComboBox1.getItemAt(jComboBox1.getSelectedIndex());
-        String licenseNumber = jTextField6.getText();
-        String assignedOffice = jTextField7.getText();
-        String username = jTextField8.getText();
-        String password = jTextField9.getText();
-        String comPassword = jTextField10.getText();
-        Specialty specialty = Specialty.valueOf(spec.replaceAll(" &", "").replaceAll(" ", "_"));
-        if (password.equals(comPassword)) {
-            users.add(new Doctor(id, username, firstname, lastname, password, specialty, licenseNumber, assignedOffice));
+        Object spec = cmbDoctorSpecialty.getSelectedItem();
+        Response r = doctorController.registerDoctor(
+                txtDoctorId.getText(),
+                txtDoctorUsername.getText(),
+                txtDoctorPassword.getText(),
+                txtDoctorConfirmPassword.getText(),
+                txtDoctorFirstname.getText(),
+                txtDoctorLastname.getText(),
+                txtDoctorLicense.getText(),
+                txtDoctorOffice.getText(),
+                spec == null ? "" : spec.toString());
+        if (r.isOk()) {
+            JOptionPane.showMessageDialog(this, "Doctor registered.");
+            for (JTextField f : new JTextField[]{txtDoctorId, txtDoctorUsername, txtDoctorPassword,
+                    txtDoctorConfirmPassword, txtDoctorFirstname, txtDoctorLastname,
+                    txtDoctorLicense, txtDoctorOffice}) {
+                f.setText("");
+            }
+            refreshUsersData();
+        } else {
+            JOptionPane.showMessageDialog(this, r.getMessage(), "Registration failed", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        long idDoctor = Long.parseLong(jComboBox2.getItemAt(jComboBox2.getSelectedIndex()));
-        Doctor temp = null;
-        for(User use:this.users){
-            if(use.getId() == idDoctor)
-                temp =(Doctor) user;
+        Map<String, Object> doctor = pickedDoctorFromCombo();
+        if (doctor == null) {
+            JOptionPane.showMessageDialog(this, "Select a doctor from the list.");
+            return;
         }
-        NewJFrame111 doctor = new NewJFrame111(user,temp, users, hospitalizations,appointments);
-        this.setVisible(false);
-        doctor.setVisible(true);
+        DataStore.getInstance().removeObserver(this);
+        new DoctorView(loggedInUser, doctor).setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
-        
-        NewJFrame login = new NewJFrame();
-        this.setVisible(false);
-        login.setVisible(true);
+        DataStore.getInstance().removeObserver(this);
+        new LoginView().setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_jButton10ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        long idPatient = Long.parseLong(jComboBox2.getItemAt(jComboBox2.getSelectedIndex()));
-        Patient temp = null;
-        for(User use:this.users){
-            if(use.getId() == idPatient)
-                temp =(Patient) user;
+        Map<String, Object> patient = pickedPatientFromCombo();
+        if (patient == null) {
+            JOptionPane.showMessageDialog(this, "Select a patient from the list.");
+            return;
         }
-        NewJFrame1 patient = new NewJFrame1(user,temp,users,appointments,hospitalizations);
-        this.setVisible(false);
-        patient.setVisible(true);
+        DataStore.getInstance().removeObserver(this);
+        new PatientView(loggedInUser, patient).setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_jButton3ActionPerformed
+
+    // ---- helpers ----
+
+    private void populateSpecialtyCombo() {
+        cmbDoctorSpecialty.removeAllItems();
+        for (Specialty s : Specialty.values()) cmbDoctorSpecialty.addItem(s.name());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void refreshUsersData() {
+        cachedDoctors.clear();
+        cachedPatients.clear();
+        Response rd = doctorController.getDoctors();
+        Response rp = patientController.getPatients();
+        if (rd.isOk()) cachedDoctors.addAll((List<Map<String, Object>>) rd.getData());
+        if (rp.isOk()) cachedPatients.addAll((List<Map<String, Object>>) rp.getData());
+
+        cmbUserPicker.removeAllItems();
+        for (Map<String, Object> d : cachedDoctors) {
+            cmbUserPicker.addItem("DOC|" + d.get("id") + " - Dr. " + d.get("firstname") + " " + d.get("lastname"));
+        }
+        for (Map<String, Object> p : cachedPatients) {
+            cmbUserPicker.addItem("PAT|" + p.get("id") + " - " + p.get("firstname") + " " + p.get("lastname"));
+        }
+    }
+
+    private Map<String, Object> pickedDoctorFromCombo() {
+        Object sel = cmbUserPicker.getSelectedItem();
+        if (sel == null) return null;
+        String s = sel.toString();
+        if (!s.startsWith("DOC|")) return null;
+        long id = Long.parseLong(s.substring(4, s.indexOf(" - ")));
+        for (Map<String, Object> d : cachedDoctors) {
+            if (((Number) d.get("id")).longValue() == id) return d;
+        }
+        return null;
+    }
+
+    private Map<String, Object> pickedPatientFromCombo() {
+        Object sel = cmbUserPicker.getSelectedItem();
+        if (sel == null) return null;
+        String s = sel.toString();
+        if (!s.startsWith("PAT|")) return null;
+        long id = Long.parseLong(s.substring(4, s.indexOf(" - ")));
+        for (Map<String, Object> p : cachedPatients) {
+            if (((Number) p.get("id")).longValue() == id) return p;
+        }
+        return null;
+    }
+
+    @Override
+    public void update(String event, Object data) {
+        if ("PATIENT_ADDED".equals(event) || "DOCTOR_ADDED".equals(event)
+                || "PATIENT_UPDATED".equals(event) || "DOCTOR_UPDATED".equals(event)) {
+            javax.swing.SwingUtilities.invokeLater(this::refreshUsersData);
+        }
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -493,8 +612,8 @@ public class NewJFrame11 extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField7;
     private javax.swing.JTextField jTextField8;
     private javax.swing.JTextField jTextField9;
-    private packagee.PanelRound panelRound1;
-    private packagee.PanelRound panelRound2;
-    private packagee.PanelRound panelRound3;
+    private packagee.view.PanelRound panelRound1;
+    private packagee.view.PanelRound panelRound2;
+    private packagee.view.PanelRound panelRound3;
     // End of variables declaration//GEN-END:variables
 }

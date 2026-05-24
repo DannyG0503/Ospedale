@@ -34,7 +34,7 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Container class="packagee.PanelRound" name="panelRound1">
+    <Container class="packagee.view.PanelRound" name="panelRound1">
       <Properties>
         <Property name="radius" type="int" value="50"/>
       </Properties>
@@ -57,7 +57,7 @@
         </DimensionLayout>
       </Layout>
       <SubComponents>
-        <Container class="packagee.PanelRound" name="panelRound2">
+        <Container class="packagee.view.PanelRound" name="panelRound2">
           <Properties>
             <Property name="radius" type="int" value="50"/>
           </Properties>
