@@ -4,11 +4,6 @@
  */
 package packagee.view;
 
-<<<<<<< HEAD:src/packagee/view/LoginView.java
-=======
-import packagee.model.*;
-import com.formdev.flatlaf.FlatDarkLaf;
->>>>>>> 1cea28b9277e52c2c7c4a4b39f5b0f64d28a1115:src/packagee/NewJFrame.java
 import java.awt.Color;
 import java.util.Map;
 import javax.swing.JOptionPane;

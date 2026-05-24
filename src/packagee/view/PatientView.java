@@ -910,7 +910,6 @@ public class PatientView extends javax.swing.JFrame implements Observer {
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-<<<<<<< HEAD:src/packagee/view/PatientView.java
         String reason = jTextArea3.getText();
         String date = jTextField16.getText();
         Response r = hospitalizationController.requestHospitalization(
@@ -943,14 +942,6 @@ public class PatientView extends javax.swing.JFrame implements Observer {
             String status = String.valueOf(a.get("status"));
             if (!"COMPLETED".equals(status) && !"CANCELED".equals(status)) {
                 txtCancelAppointmentId.addItem((String) a.get("id"));
-=======
-        String hospitalizationReason = jTextArea3.getText();
-        long idDoctor = Long.parseLong(jComboBox2.getItemAt(jComboBox2.getSelectedIndex()));
-        Doctor doc = null;
-        for(User use: this.users){
-            if (use.getId()  == idDoctor ){
-                doc = (Doctor) use;
->>>>>>> 1cea28b9277e52c2c7c4a4b39f5b0f64d28a1115:src/packagee/NewJFrame1.java
             }
         }
     }
