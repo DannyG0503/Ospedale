@@ -9,16 +9,15 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JButton;
-import packagee.controller.AuthController;
-import packagee.controller.PatientController;
+import packagee.controller.NavigationController;
 import packagee.controller.Response;
 import packagee.controller.interfaces.IAuthController;
 import packagee.controller.interfaces.IPatientController;
-import packagee.model.DataStore;
 
 public class LoginView extends javax.swing.JFrame {
 
     private int x, y;
+    private final NavigationController nav;
     private final IAuthController authController;
     private final IPatientController patientController;
 
@@ -27,10 +26,10 @@ public class LoginView extends javax.swing.JFrame {
     private JTextField txtPassword;
     private JButton btnLogin;
 
-    public LoginView() {
-        DataStore ds = DataStore.getInstance();
-        this.authController = new AuthController(ds);
-        this.patientController = new PatientController(ds);
+    public LoginView(NavigationController nav, IAuthController authController, IPatientController patientController) {
+        this.nav = nav;
+        this.authController = authController;
+        this.patientController = patientController;
 
         initComponents();
         this.setBackground(new Color(0, 0, 0, 0));
@@ -431,18 +430,7 @@ public class LoginView extends javax.swing.JFrame {
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> info = (Map<String, Object>) r.getData();
-        String role = (String) info.get("role");
-        javax.swing.JFrame next;
-        switch (role) {
-            case "ADMIN":   next = new AdminView(info); break;
-            case "DOCTOR":  next = new DoctorView(info, info); break;
-            case "PATIENT": next = new PatientView(info, info); break;
-            default:
-                JOptionPane.showMessageDialog(this, "Unknown role: " + role, "Login error", JOptionPane.ERROR_MESSAGE);
-                return;
-        }
-        next.setVisible(true);
-        this.dispose();
+        nav.navigateAfterLogin(info, this);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed

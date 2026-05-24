@@ -13,9 +13,7 @@ import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-import packagee.controller.AppointmentController;
-import packagee.controller.DoctorController;
-import packagee.controller.HospitalizationController;
+import packagee.controller.NavigationController;
 import packagee.controller.Response;
 import packagee.controller.interfaces.IAppointmentController;
 import packagee.controller.interfaces.IDoctorController;
@@ -27,6 +25,7 @@ import packagee.model.observer.Observer;
 public class DoctorView extends javax.swing.JFrame implements Observer {
 
     private int x, y;
+    private final NavigationController nav;
     private final Map<String, Object> loggedInUser;
     private final Map<String, Object> targetDoctor;
     private final long doctorId;
@@ -59,11 +58,13 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
 
     private final java.util.List<Map<String, Object>> cachedHospRequests = new java.util.ArrayList<>();
 
-    public DoctorView(Map<String, Object> loggedInUser, Map<String, Object> targetDoctor) {
-        DataStore ds = DataStore.getInstance();
-        this.appointmentController = new AppointmentController(ds);
-        this.hospitalizationController = new HospitalizationController(ds);
-        this.doctorController = new DoctorController(ds);
+    public DoctorView(NavigationController nav, Map<String, Object> loggedInUser, Map<String, Object> targetDoctor,
+                      IAppointmentController appointmentController, IHospitalizationController hospitalizationController,
+                      IDoctorController doctorController) {
+        this.nav = nav;
+        this.appointmentController = appointmentController;
+        this.hospitalizationController = hospitalizationController;
+        this.doctorController = doctorController;
         this.loggedInUser = loggedInUser;
         this.targetDoctor = targetDoctor;
         this.doctorId = ((Number) targetDoctor.get("id")).longValue();
@@ -1224,15 +1225,13 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
 
     private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
         DataStore.getInstance().removeObserver(this);
-        new LoginView().setVisible(true);
-        this.dispose();
+        nav.logout(this);
     }//GEN-LAST:event_jButton12ActionPerformed
 
     private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
         if (!adminViewing) return;
         DataStore.getInstance().removeObserver(this);
-        new AdminView(loggedInUser).setVisible(true);
-        this.dispose();
+        nav.showAdminView(loggedInUser, this);
     }//GEN-LAST:event_jButton11ActionPerformed
 
     private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed

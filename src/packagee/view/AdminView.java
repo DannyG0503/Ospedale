@@ -13,8 +13,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
-import packagee.controller.DoctorController;
-import packagee.controller.PatientController;
+import packagee.controller.NavigationController;
 import packagee.controller.Response;
 import packagee.controller.interfaces.IDoctorController;
 import packagee.controller.interfaces.IPatientController;
@@ -25,6 +24,7 @@ import packagee.model.observer.Observer;
 public class AdminView extends javax.swing.JFrame implements Observer {
 
     private int x, y;
+    private final NavigationController nav;
     private final Map<String, Object> loggedInUser;
 
     private final IDoctorController doctorController;
@@ -47,17 +47,18 @@ public class AdminView extends javax.swing.JFrame implements Observer {
     private final java.util.List<Map<String, Object>> cachedPatients = new java.util.ArrayList<>();
     private final java.util.List<Map<String, Object>> cachedDoctors  = new java.util.ArrayList<>();
 
-    public AdminView(Map<String, Object> loggedInUser) {
-        DataStore ds = DataStore.getInstance();
-        this.doctorController = new DoctorController(ds);
-        this.patientController = new PatientController(ds);
+    public AdminView(NavigationController nav, Map<String, Object> loggedInUser,
+                     IPatientController patientController, IDoctorController doctorController) {
+        this.nav = nav;
+        this.doctorController = doctorController;
+        this.patientController = patientController;
         this.loggedInUser = loggedInUser;
 
         initComponents();
         this.setBackground(new Color(0, 0, 0, 0));
         this.setLocationRelativeTo(null);
 
-        ds.addObserver(this);
+        DataStore.getInstance().addObserver(this);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
@@ -502,14 +503,12 @@ public class AdminView extends javax.swing.JFrame implements Observer {
             return;
         }
         DataStore.getInstance().removeObserver(this);
-        new DoctorView(loggedInUser, doctor).setVisible(true);
-        this.dispose();
+        nav.showDoctorView(loggedInUser, doctor, this);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
         DataStore.getInstance().removeObserver(this);
-        new LoginView().setVisible(true);
-        this.dispose();
+        nav.logout(this);
     }//GEN-LAST:event_jButton10ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -519,8 +518,7 @@ public class AdminView extends javax.swing.JFrame implements Observer {
             return;
         }
         DataStore.getInstance().removeObserver(this);
-        new PatientView(loggedInUser, patient).setVisible(true);
-        this.dispose();
+        nav.showPatientView(loggedInUser, patient, this);
     }//GEN-LAST:event_jButton3ActionPerformed
 
     // ---- helpers ----

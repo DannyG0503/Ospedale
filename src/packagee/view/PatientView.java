@@ -15,10 +15,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import packagee.controller.AppointmentController;
-import packagee.controller.DoctorController;
-import packagee.controller.HospitalizationController;
-import packagee.controller.PatientController;
+import packagee.controller.NavigationController;
 import packagee.controller.Response;
 import packagee.controller.interfaces.IAppointmentController;
 import packagee.controller.interfaces.IDoctorController;
@@ -31,6 +28,7 @@ import packagee.model.observer.Observer;
 public class PatientView extends javax.swing.JFrame implements Observer {
 
     private int x, y;
+    private final NavigationController nav;
     private final Map<String, Object> loggedInUser;
     private final Map<String, Object> targetPatient;
     private final long patientId;
@@ -39,6 +37,7 @@ public class PatientView extends javax.swing.JFrame implements Observer {
     private final IAppointmentController appointmentController;
     private final IHospitalizationController hospitalizationController;
     private final IPatientController patientController;
+    private final IDoctorController doctorController;
 
     // semantic aliases (per spec)
     private JTextField txtAppointmentDate;
@@ -51,11 +50,14 @@ public class PatientView extends javax.swing.JFrame implements Observer {
     private JTable     tblAppointments;
     private JButton    btnLogout;
 
-    public PatientView(Map<String, Object> loggedInUser, Map<String, Object> targetPatient) {
-        DataStore ds = DataStore.getInstance();
-        this.appointmentController = new AppointmentController(ds);
-        this.hospitalizationController = new HospitalizationController(ds);
-        this.patientController = new PatientController(ds);
+    public PatientView(NavigationController nav, Map<String, Object> loggedInUser, Map<String, Object> targetPatient,
+                       IAppointmentController appointmentController, IHospitalizationController hospitalizationController,
+                       IPatientController patientController, IDoctorController doctorController) {
+        this.nav = nav;
+        this.appointmentController = appointmentController;
+        this.hospitalizationController = hospitalizationController;
+        this.patientController = patientController;
+        this.doctorController = doctorController;
         this.loggedInUser = loggedInUser;
         this.targetPatient = targetPatient;
         this.patientId = ((Number) targetPatient.get("id")).longValue();
@@ -858,15 +860,13 @@ public class PatientView extends javax.swing.JFrame implements Observer {
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
         DataStore.getInstance().removeObserver(this);
-        new LoginView().setVisible(true);
-        this.dispose();
+        nav.logout(this);
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
         if (!adminViewing) return;
         DataStore.getInstance().removeObserver(this);
-        new AdminView(loggedInUser).setVisible(true);
-        this.dispose();
+        nav.showAdminView(loggedInUser, this);
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jRadioButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton3ActionPerformed
@@ -954,8 +954,7 @@ public class PatientView extends javax.swing.JFrame implements Observer {
     @SuppressWarnings("unchecked")
     private void populateDoctorCombo() {
         cmbDoctorOrSpecialty.removeAllItems();
-        IDoctorController dc = new DoctorController(DataStore.getInstance());
-        Response r = dc.getDoctors();
+        Response r = doctorController.getDoctors();
         if (!r.isOk()) return;
         for (Map<String, Object> d : (List<Map<String, Object>>) r.getData()) {
             cmbDoctorOrSpecialty.addItem(String.valueOf(d.get("id")));
