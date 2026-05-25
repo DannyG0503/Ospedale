@@ -7,15 +7,16 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import packagee.model.observer.Observable;
+import packagee.controller.serializer.AppointmentSerializer;
+import packagee.controller.serializer.DoctorSerializer;
+import packagee.controller.serializer.HospitalizationSerializer;
+import packagee.controller.serializer.PatientSerializer;
 import packagee.model.observer.Observer;
 
-public final class DataStore implements Observable {
+public final class DataStore implements IDataStore {
 
     private static final String USERS_JSON = "json/users.json";
     private static final String APPOINTMENTS_JSON = "json/appointments.json";
@@ -53,48 +54,56 @@ public final class DataStore implements Observable {
 
     // ----- Getters (defensive copies) -----
 
-    public ArrayList<IUser> getUsers() {
+    @Override
+    public List<IUser> getUsers() {
         return new ArrayList<>(users);
     }
 
-    public ArrayList<Patient> getPatients() {
+    @Override
+    public List<Patient> getPatients() {
         return new ArrayList<>(patients);
     }
 
-    public ArrayList<Doctor> getDoctors() {
+    @Override
+    public List<Doctor> getDoctors() {
         return new ArrayList<>(doctors);
     }
 
-    public ArrayList<Appointment> getAppointments() {
+    @Override
+    public List<Appointment> getAppointments() {
         return new ArrayList<>(appointments);
     }
 
-    public ArrayList<Hospitalization> getHospitalizations() {
+    @Override
+    public List<Hospitalization> getHospitalizations() {
         return new ArrayList<>(hospitalizations);
     }
 
     // ----- Mutators -----
 
+    @Override
     public boolean addPatient(Patient patient) {
         if (patient == null || findUserByUsername(patient.getUsername()) != null) {
             return false;
         }
         patients.add(patient);
         users.add(patient);
-        notifyObservers("PATIENT_ADDED", serializePatient(patient));
+        notifyObservers("PATIENT_ADDED", PatientSerializer.serialize(patient));
         return true;
     }
 
+    @Override
     public boolean addDoctor(Doctor doctor) {
         if (doctor == null || findUserByUsername(doctor.getUsername()) != null) {
             return false;
         }
         doctors.add(doctor);
         users.add(doctor);
-        notifyObservers("DOCTOR_ADDED", serializeDoctor(doctor));
+        notifyObservers("DOCTOR_ADDED", DoctorSerializer.serialize(doctor));
         return true;
     }
 
+    @Override
     public boolean addAdministrator(Administrator admin) {
         if (admin == null || findUserByUsername(admin.getUsername()) != null) {
             return false;
@@ -103,6 +112,7 @@ public final class DataStore implements Observable {
         return true;
     }
 
+    @Override
     public boolean addAppointment(Appointment appt) {
         if (appt == null || findAppointmentById(appt.getId()) != null) {
             return false;
@@ -114,10 +124,11 @@ public final class DataStore implements Observable {
         if (appt.getDoctor() != null) {
             appt.getDoctor().addAppointment(appt);
         }
-        notifyObservers("APPOINTMENT_ADDED", serializeAppointment(appt));
+        notifyObservers("APPOINTMENT_ADDED", AppointmentSerializer.serialize(appt));
         return true;
     }
 
+    @Override
     public boolean addHospitalization(Hospitalization hosp) {
         if (hosp == null || findHospitalizationById(hosp.getId()) != null) {
             return false;
@@ -129,7 +140,7 @@ public final class DataStore implements Observable {
         if (hosp.getDoctor() != null) {
             hosp.getDoctor().addHospitalization(hosp);
         }
-        notifyObservers("HOSPITALIZATION_ADDED", serializeHospitalization(hosp));
+        notifyObservers("HOSPITALIZATION_ADDED", HospitalizationSerializer.serialize(hosp));
         return true;
     }
 
@@ -158,64 +169,9 @@ public final class DataStore implements Observable {
         }
     }
 
-    // ----- Serializers (used by notifications) -----
-
-    public Map<String, Object> serializePatient(Patient p) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", p.getId());
-        m.put("username", p.getUsername());
-        m.put("firstname", p.getFirstname());
-        m.put("lastname", p.getLastname());
-        m.put("email", p.getEmail());
-        m.put("birthdate", p.getBirthdate() == null ? null : p.getBirthdate().toString());
-        m.put("gender", p.isGender());
-        m.put("phone", p.getPhone());
-        m.put("address", p.getAddress());
-        return m;
-    }
-
-    public Map<String, Object> serializeDoctor(Doctor d) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", d.getId());
-        m.put("username", d.getUsername());
-        m.put("firstname", d.getFirstname());
-        m.put("lastname", d.getLastname());
-        m.put("specialty", d.getSpecialty() == null ? null : d.getSpecialty().name());
-        m.put("licenceNumber", d.getLicenceNumber());
-        m.put("assignedOffice", d.getAssignedOffice());
-        return m;
-    }
-
-    public Map<String, Object> serializeAppointment(Appointment a) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", a.getId());
-        m.put("patientId", a.getPatient() == null ? null : a.getPatient().getId());
-        m.put("patientName", a.getPatient() == null ? null : a.getPatient().getFirstname() + " " + a.getPatient().getLastname());
-        m.put("doctorId", a.getDoctor() == null ? null : a.getDoctor().getId());
-        m.put("doctorName", a.getDoctor() == null ? null : a.getDoctor().getFirstname() + " " + a.getDoctor().getLastname());
-        m.put("specialty", a.getSpecialty() == null ? null : a.getSpecialty().name());
-        m.put("datetime", a.getDatetime() == null ? null : a.getDatetime().toString());
-        m.put("reason", a.getReason());
-        m.put("type", a.isType() ? "IN_PERSON" : "REMOTE");
-        m.put("status", a.getStatus() == null ? null : a.getStatus().name());
-        return m;
-    }
-
-    public Map<String, Object> serializeHospitalization(Hospitalization h) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", h.getId());
-        m.put("patientId", h.getPatient() == null ? null : h.getPatient().getId());
-        m.put("doctorId", h.getDoctor() == null ? null : h.getDoctor().getId());
-        m.put("date", h.getDate() == null ? null : h.getDate().toString());
-        m.put("reason", h.getReason());
-        m.put("roomType", h.getRoomType() == null ? null : h.getRoomType().name());
-        m.put("observations", h.getObservations());
-        m.put("status", h.getStatus() == null ? null : h.getStatus().name());
-        return m;
-    }
-
     // ----- Finders -----
 
+    @Override
     public IUser findUserByUsername(String username) {
         if (username == null) return null;
         for (IUser u : users) {
@@ -226,6 +182,7 @@ public final class DataStore implements Observable {
         return null;
     }
 
+    @Override
     public Patient findPatientById(long id) {
         for (Patient p : patients) {
             if (p.getId() == id) return p;
@@ -233,6 +190,7 @@ public final class DataStore implements Observable {
         return null;
     }
 
+    @Override
     public Doctor findDoctorById(long id) {
         for (Doctor d : doctors) {
             if (d.getId() == id) return d;
@@ -240,6 +198,7 @@ public final class DataStore implements Observable {
         return null;
     }
 
+    @Override
     public Appointment findAppointmentById(String id) {
         if (id == null) return null;
         for (Appointment a : appointments) {
@@ -248,6 +207,7 @@ public final class DataStore implements Observable {
         return null;
     }
 
+    @Override
     public Hospitalization findHospitalizationById(String id) {
         if (id == null) return null;
         for (Hospitalization h : hospitalizations) {

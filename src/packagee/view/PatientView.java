@@ -21,7 +21,6 @@ import packagee.controller.interfaces.IAppointmentController;
 import packagee.controller.interfaces.IDoctorController;
 import packagee.controller.interfaces.IHospitalizationController;
 import packagee.controller.interfaces.IPatientController;
-import packagee.model.DataStore;
 import packagee.model.Specialty;
 import packagee.model.observer.Observer;
 
@@ -85,15 +84,15 @@ public class PatientView extends javax.swing.JFrame implements Observer {
         refreshAppointmentsTable();
         prefillProfileFields(resolveFullPatient(targetPatient));
 
-        DataStore.getInstance().addObserver(this);
+        nav.subscribe(this);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
-                DataStore.getInstance().removeObserver(PatientView.this);
+                nav.unsubscribe(PatientView.this);
             }
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
-                DataStore.getInstance().removeObserver(PatientView.this);
+                nav.unsubscribe(PatientView.this);
             }
         });
     }
@@ -859,13 +858,13 @@ public class PatientView extends javax.swing.JFrame implements Observer {
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-        DataStore.getInstance().removeObserver(this);
+        nav.unsubscribe(this);
         nav.logout(this);
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
         if (!adminViewing) return;
-        DataStore.getInstance().removeObserver(this);
+        nav.unsubscribe(this);
         nav.showAdminView(loggedInUser, this);
     }//GEN-LAST:event_jButton7ActionPerformed
 

@@ -3,20 +3,19 @@ package packagee.controller;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import packagee.controller.interfaces.IAuthController;
-import packagee.model.Administrator;
-import packagee.model.DataStore;
-import packagee.model.Doctor;
+import packagee.model.IDataStore;
 import packagee.model.IUser;
-import packagee.model.Patient;
+import packagee.model.Role;
 
 public class AuthController implements IController, IAuthController {
 
-    private final DataStore store;
+    private final IDataStore store;
 
-    public AuthController(DataStore store) {
+    public AuthController(IDataStore store) {
         this.store = store;
     }
 
+    @Override
     public Response login(String username, String password) {
         if (username == null || username.isEmpty()) {
             return new Response(Response.BAD_REQUEST, "Username is required", null);
@@ -33,14 +32,8 @@ public class AuthController implements IController, IAuthController {
         data.put("username", user.getUsername());
         data.put("firstname", user.getFirstname());
         data.put("lastname", user.getLastname());
-        data.put("role", roleOf(user));
+        Role role = user.getRole();
+        data.put("role", role == null ? "UNKNOWN" : role.name());
         return new Response(Response.OK, "Login successful", data);
-    }
-
-    private static String roleOf(IUser u) {
-        if (u instanceof Administrator) return "ADMIN";
-        if (u instanceof Doctor) return "DOCTOR";
-        if (u instanceof Patient) return "PATIENT";
-        return "UNKNOWN";
     }
 }

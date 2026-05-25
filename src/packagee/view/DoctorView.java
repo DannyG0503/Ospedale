@@ -19,7 +19,6 @@ import packagee.controller.Response;
 import packagee.controller.interfaces.IAppointmentController;
 import packagee.controller.interfaces.IDoctorController;
 import packagee.controller.interfaces.IHospitalizationController;
-import packagee.model.DataStore;
 import packagee.model.Specialty;
 import packagee.model.observer.Observer;
 
@@ -111,15 +110,15 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
         populateSpecialtyComboForProfile();
         prefillProfileFields(resolveFullDoctor(targetDoctor));
 
-        DataStore.getInstance().addObserver(this);
+        nav.subscribe(this);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
-                DataStore.getInstance().removeObserver(DoctorView.this);
+                nav.unsubscribe(DoctorView.this);
             }
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
-                DataStore.getInstance().removeObserver(DoctorView.this);
+                nav.unsubscribe(DoctorView.this);
             }
         });
     }
@@ -1225,13 +1224,13 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
-        DataStore.getInstance().removeObserver(this);
+        nav.unsubscribe(this);
         nav.logout(this);
     }//GEN-LAST:event_jButton12ActionPerformed
 
     private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
         if (!adminViewing) return;
-        DataStore.getInstance().removeObserver(this);
+        nav.unsubscribe(this);
         nav.showAdminView(loggedInUser, this);
     }//GEN-LAST:event_jButton11ActionPerformed
 

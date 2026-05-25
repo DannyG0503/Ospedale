@@ -79,4 +79,9 @@ public class Patient extends User {
     public void addAppointment(Appointment a) {
         this.appointments.add(a);
     }
+
+    @Override
+    public Role getRole() {
+        return Role.PATIENT;
+    }
 }

@@ -12,6 +12,8 @@ public interface IUser {
 
     String getPassword();
 
+    Role getRole();
+
     void setUsername(String username);
 
     void setFirstname(String firstname);

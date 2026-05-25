@@ -15,6 +15,7 @@ import packagee.controller.interfaces.IDoctorController;
 import packagee.controller.interfaces.IHospitalizationController;
 import packagee.controller.interfaces.IPatientController;
 import packagee.model.DataStore;
+import packagee.model.IDataStore;
 
 public final class Main {
 
@@ -28,13 +29,13 @@ public final class Main {
             System.err.println("Failed to initialize LaF: " + ex.getMessage());
         }
         SwingUtilities.invokeLater(() -> {
-            DataStore ds = DataStore.getInstance();
+            IDataStore ds = DataStore.getInstance();
             IAuthController auth = new AuthController(ds);
             IPatientController patient = new PatientController(ds);
             IDoctorController doctor = new DoctorController(ds);
             IAppointmentController appointment = new AppointmentController(ds);
             IHospitalizationController hospitalization = new HospitalizationController(ds);
-            NavigationController nav = new NavigationController(auth, patient, doctor, appointment, hospitalization);
+            NavigationController nav = new NavigationController(auth, patient, doctor, appointment, hospitalization, ds);
             nav.showLogin();
         });
     }

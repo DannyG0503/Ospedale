@@ -2,27 +2,29 @@ package packagee.controller;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import packagee.controller.interfaces.IHospitalizationController;
+import packagee.controller.serializer.AppointmentSerializer;
+import packagee.controller.serializer.HospitalizationSerializer;
 import packagee.model.Appointment;
 import packagee.model.AppointmentStatus;
-import packagee.model.DataStore;
 import packagee.model.Doctor;
 import packagee.model.Hospitalization;
 import packagee.model.HospitalizationStatus;
+import packagee.model.IDataStore;
 import packagee.model.Patient;
 import packagee.model.RoomType;
 
 public class HospitalizationController implements IController, IHospitalizationController {
 
-    private final DataStore store;
+    private final IDataStore store;
 
-    public HospitalizationController(DataStore store) {
+    public HospitalizationController(IDataStore store) {
         this.store = store;
     }
 
+    @Override
     public Response requestHospitalization(String patientId, String reason, String date) {
         if (!Validator.isValidId12Digits(patientId))
             return new Response(Response.BAD_REQUEST, "Invalid patient id", null);
@@ -36,9 +38,10 @@ public class HospitalizationController implements IController, IHospitalizationC
         Hospitalization h = new Hospitalization(hospId, patient, null, LocalDate.parse(date),
                                                 reason, RoomType.STANDARD, "");
         store.addHospitalization(h);
-        return new Response(Response.OK, "Hospitalization requested", serialize(h));
+        return new Response(Response.OK, "Hospitalization requested", HospitalizationSerializer.serialize(h));
     }
 
+    @Override
     public Response approveHospitalization(String hospitalizationId, String doctorId) {
         Hospitalization h = store.findHospitalizationById(hospitalizationId);
         if (h == null) return new Response(Response.NOT_FOUND, "Hospitalization not found", null);
@@ -54,10 +57,11 @@ public class HospitalizationController implements IController, IHospitalizationC
             h.setDoctor(doctor);
             doctor.addHospitalization(h);
         }
-        store.notifyObservers("HOSPITALIZATION_UPDATED", store.serializeHospitalization(h));
-        return new Response(Response.OK, "Hospitalization approved", serialize(h));
+        store.notifyObservers("HOSPITALIZATION_UPDATED", HospitalizationSerializer.serialize(h));
+        return new Response(Response.OK, "Hospitalization approved", HospitalizationSerializer.serialize(h));
     }
 
+    @Override
     public Response denyHospitalization(String hospitalizationId, String doctorId) {
         Hospitalization h = store.findHospitalizationById(hospitalizationId);
         if (h == null) return new Response(Response.NOT_FOUND, "Hospitalization not found", null);
@@ -68,10 +72,11 @@ public class HospitalizationController implements IController, IHospitalizationC
         if (h.getStatus() != HospitalizationStatus.REQUESTED)
             return new Response(Response.CONFLICT, "Hospitalization is not in REQUESTED state", null);
         h.setStatus(HospitalizationStatus.CANCELED);
-        store.notifyObservers("HOSPITALIZATION_UPDATED", store.serializeHospitalization(h));
-        return new Response(Response.OK, "Hospitalization denied", serialize(h));
+        store.notifyObservers("HOSPITALIZATION_UPDATED", HospitalizationSerializer.serialize(h));
+        return new Response(Response.OK, "Hospitalization denied", HospitalizationSerializer.serialize(h));
     }
 
+    @Override
     public Response hospitalizeFromAppointment(String appointmentId, String doctorId, String reason) {
         Appointment a = store.findAppointmentById(appointmentId);
         if (a == null) return new Response(Response.NOT_FOUND, "Appointment not found", null);
@@ -83,19 +88,20 @@ public class HospitalizationController implements IController, IHospitalizationC
             return new Response(Response.CONFLICT, "Appointment must be PENDING", null);
 
         a.setStatus(AppointmentStatus.COMPLETED);
-        store.notifyObservers("APPOINTMENT_UPDATED", store.serializeAppointment(a));
+        store.notifyObservers("APPOINTMENT_UPDATED", AppointmentSerializer.serialize(a));
         String hospId = nextHospitalizationId(a.getPatient().getId());
         Hospitalization h = new Hospitalization(hospId, a.getPatient(), a.getDoctor(),
                                                 LocalDate.now(), reason, RoomType.STANDARD, "",
                                                 HospitalizationStatus.ONGOING);
         store.addHospitalization(h);
-        return new Response(Response.OK, "Hospitalization created from appointment", serialize(h));
+        return new Response(Response.OK, "Hospitalization created from appointment", HospitalizationSerializer.serialize(h));
     }
 
+    @Override
     public Response getHospitalizations() {
         List<Hospitalization> list = store.getHospitalizations();
         List<Map<String, Object>> data = new ArrayList<>(list.size());
-        for (Hospitalization h : list) data.add(serialize(h));
+        for (Hospitalization h : list) data.add(HospitalizationSerializer.serialize(h));
         return new Response(Response.OK, "OK", data);
     }
 
@@ -111,20 +117,5 @@ public class HospitalizationController implements IController, IHospitalizationC
             }
         }
         return String.format("%s%04d", prefix, max + 1);
-    }
-
-    static Map<String, Object> serialize(Hospitalization h) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", h.getId());
-        m.put("patientId", h.getPatient() == null ? null : h.getPatient().getId());
-        m.put("patientName", h.getPatient() == null ? null : h.getPatient().getFirstname() + " " + h.getPatient().getLastname());
-        m.put("doctorId", h.getDoctor() == null ? null : h.getDoctor().getId());
-        m.put("doctorName", h.getDoctor() == null ? null : h.getDoctor().getFirstname() + " " + h.getDoctor().getLastname());
-        m.put("date", h.getDate() == null ? null : h.getDate().toString());
-        m.put("reason", h.getReason());
-        m.put("roomType", h.getRoomType() == null ? null : h.getRoomType().name());
-        m.put("observations", h.getObservations());
-        m.put("status", h.getStatus() == null ? null : h.getStatus().name());
-        return m;
     }
 }

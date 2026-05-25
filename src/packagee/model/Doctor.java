@@ -59,4 +59,9 @@ public class Doctor extends User {
     public void setAssignedOffice(String assignedOffice) {
         this.assignedOffice = assignedOffice;
     }
+
+    @Override
+    public Role getRole() {
+        return Role.DOCTOR;
+    }
 }

@@ -17,7 +17,6 @@ import packagee.controller.NavigationController;
 import packagee.controller.Response;
 import packagee.controller.interfaces.IDoctorController;
 import packagee.controller.interfaces.IPatientController;
-import packagee.model.DataStore;
 import packagee.model.Specialty;
 import packagee.model.observer.Observer;
 
@@ -58,15 +57,15 @@ public class AdminView extends javax.swing.JFrame implements Observer {
         this.setBackground(new Color(0, 0, 0, 0));
         this.setLocationRelativeTo(null);
 
-        DataStore.getInstance().addObserver(this);
+        nav.subscribe(this);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
-                DataStore.getInstance().removeObserver(AdminView.this);
+                nav.unsubscribe(AdminView.this);
             }
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
-                DataStore.getInstance().removeObserver(AdminView.this);
+                nav.unsubscribe(AdminView.this);
             }
         });
 
@@ -502,12 +501,12 @@ public class AdminView extends javax.swing.JFrame implements Observer {
             JOptionPane.showMessageDialog(this, "Select a doctor from the list.");
             return;
         }
-        DataStore.getInstance().removeObserver(this);
+        nav.unsubscribe(this);
         nav.showDoctorView(loggedInUser, doctor, this);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
-        DataStore.getInstance().removeObserver(this);
+        nav.unsubscribe(this);
         nav.logout(this);
     }//GEN-LAST:event_jButton10ActionPerformed
 
@@ -517,7 +516,7 @@ public class AdminView extends javax.swing.JFrame implements Observer {
             JOptionPane.showMessageDialog(this, "Select a patient from the list.");
             return;
         }
-        DataStore.getInstance().removeObserver(this);
+        nav.unsubscribe(this);
         nav.showPatientView(loggedInUser, patient, this);
     }//GEN-LAST:event_jButton3ActionPerformed
 
