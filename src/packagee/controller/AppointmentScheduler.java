@@ -1,6 +1,7 @@
 package packagee.controller;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import packagee.model.Appointment;
 import packagee.model.AppointmentStatus;
 import packagee.model.Doctor;
@@ -8,6 +9,8 @@ import packagee.model.IDataStore;
 import packagee.model.Specialty;
 
 public class AppointmentScheduler {
+
+    public static final int APPOINTMENT_DURATION_MINUTES = 15;
 
     private final IDataStore store;
 
@@ -21,7 +24,8 @@ public class AppointmentScheduler {
             if (a.getDoctor() == null || a.getDoctor().getId() != d.getId()) continue;
             AppointmentStatus s = a.getStatus();
             if (s != AppointmentStatus.REQUESTED && s != AppointmentStatus.PENDING) continue;
-            if (when.equals(a.getDatetime())) return false;
+            long diff = Math.abs(ChronoUnit.MINUTES.between(a.getDatetime(), when));
+            if (diff < APPOINTMENT_DURATION_MINUTES) return false;
         }
         return true;
     }

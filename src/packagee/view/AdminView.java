@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 import packagee.controller.NavigationController;
 import packagee.controller.Response;
@@ -41,6 +43,7 @@ public class AdminView extends javax.swing.JFrame implements Observer {
     private JComboBox<String> cmbDoctorSpecialty;
     private JButton    btnRegisterDoctor;
     private JComboBox<String> cmbUserPicker;
+    private JLabel     lblWelcomeAdmin;
 
     // simple in-memory lists of users (id -> map) so we can map combo selection back to a user
     private final java.util.List<Map<String, Object>> cachedPatients = new java.util.ArrayList<>();
@@ -83,6 +86,18 @@ public class AdminView extends javax.swing.JFrame implements Observer {
 
         populateSpecialtyCombo();
         refreshUsersData();
+
+        String firstname = loggedInUser == null ? "" : String.valueOf(loggedInUser.getOrDefault("firstname", ""));
+        String lastname  = loggedInUser == null ? "" : String.valueOf(loggedInUser.getOrDefault("lastname", ""));
+        this.lblWelcomeAdmin = new JLabel("Bienvenido, " + firstname + " " + lastname);
+        this.lblWelcomeAdmin.setFont(new java.awt.Font("Yu Gothic UI", 1, 16));
+        this.lblWelcomeAdmin.setHorizontalAlignment(JLabel.CENTER);
+        this.lblWelcomeAdmin.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 0, 8, 0));
+        JPanel root = new JPanel(new java.awt.BorderLayout());
+        root.add(this.lblWelcomeAdmin, java.awt.BorderLayout.NORTH);
+        root.add(panelRound1, java.awt.BorderLayout.CENTER);
+        setContentPane(root);
+        pack();
     }
 
     /**

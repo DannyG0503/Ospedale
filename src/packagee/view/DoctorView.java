@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
@@ -55,6 +57,9 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
     private JButton    btnApproveHospitalization;
     private JButton    btnDenyHospitalization;
     private JButton    btnLogout;
+    private JComboBox<String> cmbHospitalizeAppointment;
+    private JTextField txtHospitalizeReason;
+    private JButton    btnHospitalizeFromAppointment;
 
     private final java.util.List<Map<String, Object>> cachedHospRequests = new java.util.ArrayList<>();
 
@@ -109,6 +114,9 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
         refreshDoctorAppointmentsTable();
         populateSpecialtyComboForProfile();
         prefillProfileFields(resolveFullDoctor(targetDoctor));
+
+        buildHospitalizeFromAppointmentTab();
+        populateHospitalizeAppointmentCombo();
 
         nav.subscribe(this);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -1456,6 +1464,7 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
                     populateCompleteCombo();
                     populateRescheduleCombo();
                     populatePrescribeCombo();
+                    populateHospitalizeAppointmentCombo();
                     refreshDoctorAppointmentsTable();
                 });
                 break;
@@ -1465,6 +1474,80 @@ public class DoctorView extends javax.swing.JFrame implements Observer {
                 break;
             default:
                 break;
+        }
+    }
+
+    private void buildHospitalizeFromAppointmentTab() {
+        cmbHospitalizeAppointment = new JComboBox<>();
+        cmbHospitalizeAppointment.setFont(new java.awt.Font("Yu Gothic UI", 0, 18));
+        txtHospitalizeReason = new JTextField();
+        txtHospitalizeReason.setFont(new java.awt.Font("Yu Gothic UI", 0, 18));
+        btnHospitalizeFromAppointment = new JButton("Hospitalize from Appointment");
+        btnHospitalizeFromAppointment.setFont(new java.awt.Font("Yu Gothic UI", 0, 18));
+        btnHospitalizeFromAppointment.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                onHospitalizeFromAppointment();
+            }
+        });
+
+        JLabel lblAppt = new JLabel("Pending appointment:");
+        lblAppt.setFont(new java.awt.Font("Yu Gothic UI", 0, 18));
+        JLabel lblReason = new JLabel("Reason:");
+        lblReason.setFont(new java.awt.Font("Yu Gothic UI", 0, 18));
+
+        JPanel form = new JPanel(new java.awt.GridBagLayout());
+        java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+        gbc.insets = new java.awt.Insets(8, 8, 8, 8);
+        gbc.anchor = java.awt.GridBagConstraints.WEST;
+        gbc.fill = java.awt.GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        form.add(lblAppt, gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        form.add(cmbHospitalizeAppointment, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
+        form.add(lblReason, gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        form.add(txtHospitalizeReason, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
+        gbc.fill = java.awt.GridBagConstraints.NONE;
+        gbc.anchor = java.awt.GridBagConstraints.CENTER;
+        form.add(btnHospitalizeFromAppointment, gbc);
+
+        JPanel tab = new JPanel(new java.awt.BorderLayout());
+        tab.add(form, java.awt.BorderLayout.NORTH);
+        jTabbedPane1.addTab("Hospitalize from appointment", tab);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void populateHospitalizeAppointmentCombo() {
+        if (cmbHospitalizeAppointment == null) return;
+        cmbHospitalizeAppointment.removeAllItems();
+        Response r = appointmentController.getAppointmentsByDoctor(String.valueOf(doctorId), true);
+        if (!r.isOk()) return;
+        for (Map<String, Object> a : (List<Map<String, Object>>) r.getData()) {
+            cmbHospitalizeAppointment.addItem((String) a.get("id"));
+        }
+    }
+
+    private void onHospitalizeFromAppointment() {
+        Object sel = cmbHospitalizeAppointment.getSelectedItem();
+        if (sel == null) {
+            JOptionPane.showMessageDialog(this, "Pick a PENDING appointment to hospitalize.");
+            return;
+        }
+        String reason = txtHospitalizeReason.getText();
+        Response r = hospitalizationController.hospitalizeFromAppointment(
+                sel.toString(), String.valueOf(doctorId), reason);
+        if (r.isOk()) {
+            JOptionPane.showMessageDialog(this, r.getMessage());
+            txtHospitalizeReason.setText("");
+            populateHospitalizeAppointmentCombo();
+        } else {
+            JOptionPane.showMessageDialog(this, r.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
